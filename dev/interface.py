@@ -1,3 +1,6 @@
+"""
+    User friendlier interface for the animal image classifier.
+"""
 import tkinter as tk
 from tkinter import filedialog, Frame, Button, messagebox
 from PIL import Image, ImageTk
@@ -6,8 +9,6 @@ import numpy as np
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 
-# image uploader function
-
 # Main method
 def main():
 
@@ -15,6 +16,7 @@ def main():
     img_height, img_width = 128, 128
     class_names = ['cockroach', 'hummingbird', 'panda', 'shark', 'snake', 'starfish', 'swan', 'tiger', 'wolf', 'wombat']
 
+    # load dataset
     train_ds = tf.keras.utils.image_dataset_from_directory(directory="animalsSubset_10classes", labels='inferred', validation_split=0.15, subset="training", seed=123, image_size=(img_height, img_width), batch_size=batch_size)
     val_ds = tf.keras.utils.image_dataset_from_directory(directory="animalsSubset_10classes", labels='inferred', validation_split=0.15, subset="validation", seed=123, image_size=(img_height, img_width), batch_size=batch_size)
     AUTOTUNE = tf.data.AUTOTUNE
@@ -23,6 +25,7 @@ def main():
     val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
     num_classes = len(class_names)
 
+    # create model
     model = Sequential([
         layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
         layers.Conv2D(16, 3, padding='same', activation='relu'),
@@ -36,10 +39,12 @@ def main():
         layers.Dense(num_classes)
     ])
 
+    # compile the model
     model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
     
+    # fit model with 25 epochs
     epochs=25
     model.fit(
         train_ds,
@@ -74,6 +79,7 @@ def main():
     app.mainloop()
 
 
+# function to upload image
 def imageUploader(app, label):
     fileTypes = [("Image files", "*.png;*.jpg;*.jpeg")]
     path = filedialog.askopenfilename(filetypes=fileTypes)
@@ -94,7 +100,7 @@ def imageUploader(app, label):
     else:
         messagebox.showinfo(title="Warning!", message="No file was uploaded.")
 
-
+# classify image
 def imageClassifier(label, model, class_names):
 
     if label and label.image: 
@@ -121,6 +127,5 @@ def imageClassifier(label, model, class_names):
             .format(class_names[np.argmax(score)], 100 * np.max(score)))
 
         
-
 if __name__ == "__main__":
     main()
